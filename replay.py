@@ -22,7 +22,7 @@ def replay_actions():
     listener.start()
 
     try:
-        with open("E:/pythons/pyex2/recorded_actions.json", "r") as f:
+        with open(r"E:\pythons\pyex2\recorded_actions.json", "r") as f:
             actions = json.load(f)
     except FileNotFoundError:
         print("未找到录制文件 recorded_actions.json，请先运行 record.py 进行录制。")

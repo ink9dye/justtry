@@ -2,13 +2,10 @@
 from pynput import mouse, keyboard
 import time
 import json
-import os
 
 # 存储动作的列表
 actions = []
-# 获取脚本所在目录
-script_dir = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(script_dir, "recorded_actions.json")
+
 # 记录开始时间
 start_time = None
 stop_recording = False  # 全局变量用于控制停止录制
@@ -89,9 +86,9 @@ def start_recording():
     print("录制完成。")
 
     # 将动作保存到文件
-    with open(file_path, "w") as f:
+    with open(r"E:\pythons\pyex2\recorded_actions.json", "w") as f:
         json.dump(actions, f)
-    print("动作已保存到", file_path)
+    print("动作已保存到 recorded_actions.json")
 
 if __name__ == "__main__":
     start_recording()
