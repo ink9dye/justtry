@@ -2,9 +2,30 @@ import pyautogui
 import time
 import json
 from pynput import keyboard
+import ctypes
+import sys
+
+# 检查管理员权限
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+# 如果不是管理员权限，则申请管理员权限
+if not is_admin():
+    # 重新启动脚本并申请管理员权限
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+    sys.exit()  # 退出当前实例，等待新实例启动
+
+# 禁用 DPI 感知
+ctypes.windll.user32.SetProcessDPIAware()
 
 # 全局变量控制回放是否停止
 stop_replay = False
+
+# 获取当前屏幕分辨率
+screen_width, screen_height = pyautogui.size()
 
 # 停止回放的按键处理函数
 def on_press(key):
@@ -31,10 +52,6 @@ def replay_actions():
     speed_multiplier = 1 / 2  # 两倍速
     start_time = time.time()
 
-    move_count = 0  # 记录五秒内的移动次数
-    last_reset_time = time.time()  # 用于重置计数
-    action_interval = 5  # 每五秒内最多五次移动
-
     for action in actions:
         if stop_replay:
             print("回放已停止。")
@@ -44,31 +61,23 @@ def replay_actions():
         time_to_sleep = max(0, adjusted_timestamp - (time.time() - start_time))
         time.sleep(time_to_sleep)
 
-        current_time = time.time()
-
-        # 每五秒内最多五次移动
-        if current_time - last_reset_time > action_interval:
-            move_count = 0
-            last_reset_time = current_time
-
-        # 执行鼠标和键盘动作
+        # 执行动作，将相对位置转换回实际像素坐标
         if action["type"] == "mouse_click":
-            x, y = action["position"]
-            pyautogui.moveTo(x, y)  # 保证点击前位置精确
+            x = int(action["position"][0] * screen_width)
+            y = int(action["position"][1] * screen_height)
+            pyautogui.moveTo(x, y)
             if action["pressed"]:
-                pyautogui.mouseDown(x=x, y=y, button=action["button"].split(".")[-1])
+                pyautogui.mouseDown(button=action["button"].split(".")[-1])
             else:
-                pyautogui.mouseUp(x=x, y=y, button=action["button"].split(".")[-1])
-        elif action["type"] == "mouse_move" and move_count < 5:
-            x, y = action["position"]
+                pyautogui.mouseUp(button=action["button"].split(".")[-1])
+        elif action["type"] == "mouse_move":
+            x = int(action["position"][0] * screen_width)
+            y = int(action["position"][1] * screen_height)
             pyautogui.moveTo(x, y, duration=0.1)
-            move_count += 1
         elif action["type"] == "key_press":
             pyautogui.press(action["key"].replace("'", ""))
         elif action["type"] == "wait":
-            time.sleep(action["duration"])  # 执行等待
-        elif action["type"] == "key_release":
-            pass
+            time.sleep(action["duration"])
 
     print("回放完成。")
     listener.stop()

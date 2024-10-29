@@ -1,7 +1,14 @@
-# record_actions.py
 from pynput import mouse, keyboard
 import time
 import json
+import pyautogui
+import ctypes
+
+# 禁用 DPI 感知
+ctypes.windll.user32.SetProcessDPIAware()
+
+# 获取屏幕分辨率
+screen_width, screen_height = pyautogui.size()
 
 # 存储动作的列表
 actions = []
@@ -18,7 +25,7 @@ def on_click(x, y, button, pressed):
     timestamp = time.time() - start_time
     action = {
         "type": "mouse_click",
-        "position": (x, y),
+        "position": (x / screen_width, y / screen_height),  # 按比例存储坐标
         "button": str(button),
         "pressed": pressed,
         "timestamp": timestamp
@@ -32,7 +39,7 @@ def on_move(x, y):
     timestamp = time.time() - start_time
     action = {
         "type": "mouse_move",
-        "position": (x, y),
+        "position": (x / screen_width, y / screen_height),  # 按比例存储坐标
         "timestamp": timestamp
     }
     actions.append(action)
